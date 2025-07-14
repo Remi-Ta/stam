@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STAM | Prochains passages</title>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Onest', sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: black;
+      text-align: center;
+    }
+    .info-display {
+      background-color: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 800px;
+      color: black;
+      border: 2px solid #ccc;
+      position: relative;
+    }
+    .stop-header {
+      display: flex;
+      margin-bottom: 10px;
+    }
+    .stop-name {
+      background-color: #1e1f8e;
+      color: white;
+      font-weight: 800;
+      padding: 10px;
+      border-radius: 5px 0 0 5px;
+      font-size: 20px;
+      flex-grow: 1;
+      text-align: left;
+    }
+    .stop-time {
+      background-color: black;
+      color: white;
+      font-weight: 700;
+      padding: 10px;
+      border-radius: 0 5px 5px 0;
+      font-size: 20px;
+    }
+    .label-container {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 10px;
+      font-weight: 400;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .label {
+      flex: 1;
+      text-align: left;
+    }
+    .label:nth-child(3), .label:nth-child(4) {
+      text-align: right;
+    }
+    .departure-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
+      font-size: 18px;
+      min-height: 50px;
+    }
+    .line-box {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 3px;
+      margin-right: 10px;
+      font-weight: 200;
+      flex-shrink: 0;
+    }
+    .extra-bold {
+      font-weight: 900;
+    }
+    .departure-destination {
+      flex: 2;
+      text-align: left;
+      font-weight: 800;
+    }
+    .departure-wait-time {
+      flex: 1;
+      text-align: right;
+      font-weight: 700;
+    }
+    .blinking {
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .header, .day-selection {
+      margin-bottom: 20px;
+    }
+    #home-button {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: white;
+      color: black;
+      border: 1px solid #333;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: 'Onest', sans-serif;
+      font-weight: 200;
+    }
+    #home-button:hover {
+      background-color: #f0f0f0;
+    }
+    .page-indicator {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 12px;
+      color: #666;
+      font-weight: 200;
+    }
+    .day-buttons {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .day-button {
+      padding: 10px;
+      background-color: #1e1f8e;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: 'Onest', sans-serif;
+      font-weight: 200;
+    }
+    .day-button:hover {
+      background-color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="info-display">
+    <div class="header" id="file-selection">
+      <h1>Sélectionnez un jour de la semaine :</h1>
+      <div class="day-buttons">
+        <button class="day-button" data-file="lun_mar_mer.json">Lundi</button>
+        <button class="day-button" data-file="lun_mar_mer.json">Mardi</button>
+        <button class="day-button" data-file="lun_mar_mer.json">Mercredi</button>
+        <button class="day-button" data-file="jeu_ven.json">Jeudi</button>
+        <button class="day-button" data-file="jeu_ven.json">Vendredi</button>
+        <button class="day-button" data-file="sam.json">Samedi</button>
+        <button class="day-button" data-file="dim.json">Dimanche</button>
+      </div>
+    </div>
+    <div class="stop-selection" id="stop-selection" style="display: none;">
+      <label for="stop-select">Sélectionnez un arrêt :</label>
+      <select id="stop-select"></select>
+      <button id="validate-button">Valider l'arrêt</button>
+    </div>
+    <div class="stop-header" id="stop-header" style="display: none;">
+      <div class="stop-name" id="selected-stop"></div>
+      <div class="stop-time" id="current-time"></div>
+    </div>
+    <div class="label-container" style="display: none;" id="departure-labels">
+      <div class="label">Ligne</div>
+      <div class="label">Destination</div>
+      <div class="label">Prochain départ</div>
+      <div class="label">Suivant</div>
+    </div>
+    <div id="departure-info" style="display: none;"></div>
+    <div class="page-indicator" id="page-indicator" style="display: none;"></div>
+    <button id="home-button" style="display: none;">Changer d'arrêt</button>
+  </div>
+  <script>
+    document.getElementById('validate-button').addEventListener('click', showStopInfo);
+    document.getElementById('home-button').addEventListener('click', returnToHome);
+    document.querySelectorAll('.day-button').forEach(button => {
+      button.addEventListener('click', function() {
+        const file = this.getAttribute('data-file');
+        loadJSONData(file);
+      });
+    });
+
+    let departuresData = [];
+    let selectedStop = '';
+    let currentPage = 0;
+    let updateInterval;
+    let progressInterval;
+    let stops = [];
+    let pagesContent = [];
+
+    function loadJSONData(file) {
+      fetch(file)
+        .then(response => response.json())
+        .then(data => {
+          departuresData = data;
+          stops = [...new Set(departuresData.map(d => d.Arret))].sort(customSort);
+          document.getElementById('stop-selection').style.display = 'block';
+          populateStopSelect();
+        })
+        .catch(error => console.error('Error loading JSON file:', error));
+    }
+
+    function customSort(a, b) {
+      return a.localeCompare(b, 'fr', { ignorePunctuation: true, sensitivity: 'base' });
+    }
+
+    function populateStopSelect() {
+      const select = document.getElementById('stop-select');
+      select.innerHTML = '';
+      stops.forEach(stop => {
+        const option = document.createElement('option');
+        option.value = stop;
+        option.textContent = stop;
+        select.appendChild(option);
+      });
+    }
+
+    function showStopInfo() {
+      selectedStop = document.getElementById('stop-select').value;
+      if (selectedStop) {
+        currentPage = 0;
+        clearInterval(progressInterval);
+        clearInterval(updateInterval);
+        document.getElementById('file-selection').style.display = 'none';
+        document.getElementById('stop-selection').style.display = 'none';
+        document.getElementById('stop-header').style.display = 'flex';
+        document.getElementById('departure-labels').style.display = 'flex';
+        document.getElementById('departure-info').style.display = 'block';
+        document.getElementById('home-button').style.display = 'block';
+        document.getElementById('page-indicator').style.display = 'block';
+        updateStopInfo();
+        updateInterval = setInterval(updateStopInfo, 1000);
+        startPageRotation();
+      }
+    }
+
+    function returnToHome() {
+      document.getElementById('file-selection').style.display = 'block';
+      document.getElementById('stop-selection').style.display = 'block';
+      document.getElementById('stop-header').style.display = 'none';
+      document.getElementById('departure-labels').style.display = 'none';
+      document.getElementById('departure-info').style.display = 'none';
+      document.getElementById('home-button').style.display = 'none';
+      document.getElementById('page-indicator').style.display = 'none';
+      clearInterval(updateInterval);
+      clearInterval(progressInterval);
+    }
+
+    function updateStopInfo() {
+      const now = new Date();
+      document.getElementById('selected-stop').textContent = selectedStop;
+      document.getElementById('current-time').textContent = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const filtered = departuresData.filter(d => d.Arret === selectedStop);
+      const uniquePairs = [...new Set(filtered.map(d => `${d.Ligne}||${d.Destination}`))];
+      const container = document.getElementById('departure-info');
+      container.innerHTML = '';
+      pagesContent = [];
+      for (let i = 0; i < Math.ceil(uniquePairs.length / 4); i++) {
+        const page = uniquePairs.slice(i * 4, i * 4 + 4);
+        const pageElement = document.createElement('div');
+        pageElement.className = 'page';
+        pageElement.style.display = 'none';
+        page.forEach(pair => {
+          const [line, destination] = pair.split('||');
+          if (!line && !destination) {
+            return;
+          }
+          const relevant = filtered.filter(d => d.Ligne === line && d.Destination === destination);
+          const sorted = relevant.map(d => {
+            const [h, m] = d.Heure.split(':').map(Number);
+            const dep = new Date();
+            dep.setHours(h, m, 0, 0);
+            if (dep < now) dep.setDate(dep.getDate() + 1);
+            return { ...d, departureTime: dep };
+          }).sort((a, b) => a.departureTime - b.departureTime);
+          const remainingDepartures = sorted.filter(d => d.departureTime >= now);
+          const next = remainingDepartures[0];
+          const following = remainingDepartures[1];
+          const nextText = next ? formatWaitTime(next.departureTime - now, next.departureTime) : null;
+          const followingText = following ? formatWaitTime(following.departureTime - now, following.departureTime) : null;
+          const div = document.createElement('div');
+          div.className = 'departure-item';
+          if (remainingDepartures.length === 0) {
+            div.innerHTML = `
+              <div class="line-box extra-bold" style="background-color:${sorted[0]?.Couleur_fond || '#ccc'}; color: ${sorted[0]?.Couleur_indice || '#333'}">${line}</div>
+              <div class="departure-destination">${destination}</div>
+              <div class="departure-wait-time" colspan="2">Service terminé.</div>
+              <div class="departure-wait-time"></div>
+            `;
+          } else if (remainingDepartures.length === 1) {
+            div.innerHTML = `
+              <div class="line-box extra-bold" style="background-color:${next.Couleur_fond || '#ccc'}; color: ${next.Couleur_indice || '#333'}">${line}</div>
+              <div class="departure-destination">${destination}</div>
+              <div class="departure-wait-time blinking">${nextText} <span class="blinking">Dernier</span></div>
+              <div class="departure-wait-time">-</div>
+            `;
+          } else if (remainingDepartures.length === 2) {
+            div.innerHTML = `
+              <div class="line-box extra-bold" style="background-color:${next.Couleur_fond || '#ccc'}; color: ${next.Couleur_indice || '#333'}">${line}</div>
+              <div class="departure-destination">${destination}</div>
+              <div class="departure-wait-time">${nextText}</div>
+              <div class="departure-wait-time blinking">${followingText} <span class="blinking">Dernier</span></div>
+            `;
+          } else {
+            div.innerHTML = `
+              <div class="line-box extra-bold" style="background-color:${next.Couleur_fond || '#ccc'}; color: ${next.Couleur_indice || '#333'}">${line}</div>
+              <div class="departure-destination">${destination}</div>
+              <div class="departure-wait-time ${nextText === 'Imminent' ? 'blinking' : ''}">${nextText}</div>
+              <div class="departure-wait-time">${followingText || 'Aucun'}</div>
+            `;
+          }
+          pageElement.appendChild(div);
+        });
+        while (pageElement.children.length < 4) {
+          const emptyDiv = document.createElement('div');
+          emptyDiv.className = 'departure-item';
+          emptyDiv.innerHTML = `
+            <div class="line-box">&nbsp;</div>
+            <div class="departure-destination">&nbsp;</div>
+            <div class="departure-wait-time">&nbsp;</div>
+            <div class="departure-wait-time">&nbsp;</div>
+          `;
+          pageElement.appendChild(emptyDiv);
+        }
+        container.appendChild(pageElement);
+        pagesContent.push(pageElement);
+      }
+      showPage(currentPage);
+    }
+
+    function showPage(pageIndex) {
+      pagesContent.forEach((page, index) => {
+        page.style.display = index === pageIndex ? 'block' : 'none';
+      });
+      document.getElementById('page-indicator').textContent = `${pageIndex + 1}/${pagesContent.length}`;
+    }
+
+    function startPageRotation() {
+      if (pagesContent.length > 1) {
+        progressInterval = setInterval(() => {
+          currentPage = (currentPage + 1) % pagesContent.length;
+          showPage(currentPage);
+        }, 10000);
+      }
+    }
+
+    function formatWaitTime(ms, departureTime) {
+      const min = Math.floor(ms / 60000);
+      if (min <= 0) {
+        return 'Imminent';
+      } else if (min < 60) {
+        return `${min} min`;
+      } else {
+        return departureTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+  </script>
+</body>
+</html>
